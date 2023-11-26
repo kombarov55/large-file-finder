@@ -43,11 +43,6 @@ public class DataTable {
                 }).collect(Collectors.toList()).toArray(new Object[result.size()][4]);
     }
 
-    public static void main(String[] args) {
-        String s = BigDecimal.valueOf(0.05).setScale(3, RoundingMode.HALF_UP).toString();
-        System.out.println(s);
-    }
-
     private static void updateData(DefaultTableModel model, Object[][] data) {
         model.setRowCount(0);
 

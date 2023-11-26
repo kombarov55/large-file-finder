@@ -6,15 +6,12 @@ import com.company.swing.event_system.EventBus;
 import com.company.swing.event_system.payload.DirectorySelectedPayload;
 import com.company.swing.event_system.payload.SearchEndedPayload;
 import com.company.swing.event_system.payload.StartSearchPayload;
-import com.company.swing.event_system.TickEverySecond;
 
 import javax.swing.*;
 import java.awt.*;
 import java.util.List;
 
 public class SearchPanel {
-
-//    private static int seconds = 0;
 
     public static JPanel build() {
         JPanel jpanel = new JPanel();
@@ -48,38 +45,9 @@ public class SearchPanel {
         EventBus.subscribersOfDirectorySelected.add(v -> dirLabel.setText(v.getPath()));
         jpanel.add(dirLabel);
 
-//        JLabel elapsedTimeLabel = new JLabel();
-//        EventBus.subscribersOfSearchStarted.add(v -> {
-//            elapsedTimeLabel.setText(formatElapsedTime(0));
-//            elapsedTimeLabel.updateUI();
-//        });
-//        EventBus.subscribersOfTickEverySecond.add(v -> {
-//            seconds = v.getSeconds();
-//            elapsedTimeLabel.setText(formatElapsedTime(v.getSeconds()));
-//            elapsedTimeLabel.updateUI();
-//        });
-//        EventBus.subscribersOfSearchEnded.add(v -> {
-//            elapsedTimeLabel.setText("Выполнено. " + formatElapsedTime(seconds));
-//            elapsedTimeLabel.updateUI();
-//        });
-//        jpanel.add(elapsedTimeLabel);
-
-        jpanel.setMinimumSize(new Dimension(Params.width, 100));
-
-        TickEverySecond.start();
+        jpanel.setMinimumSize(new Dimension(800, 100));
 
         return jpanel;
     }
-
-//    private static String formatElapsedTime(long diff) {
-//        int seconds = (int) diff / 1000;
-//        int minutes = seconds / 60;
-//
-//        String secondsString = seconds < 10 ? "0" + seconds : "" + seconds;
-//        String minutesString = minutes < 10 ? "0" + minutes : "" + minutes;
-//
-//        return "Время выполнения: " + minutesString + ":" + secondsString;
-//    }
-
 }
 
