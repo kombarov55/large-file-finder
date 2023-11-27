@@ -1,6 +1,8 @@
 package com.company.service;
 
 import com.company.data.FileSizeInfo;
+import com.company.swing.event_system.EventBus;
+import com.company.swing.event_system.payload.ProcessingFilePayload;
 import com.company.util.Logger;
 
 import java.io.File;
@@ -10,8 +12,11 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class DirectorySizeFinderService {
+
+    private static AtomicInteger fileCount = new AtomicInteger(0);
 
     public static List<FileSizeInfo> run(String baseDir) {
         Path baseDirPath = Paths.get(baseDir);
@@ -50,6 +55,7 @@ public class DirectorySizeFinderService {
         v.sizeInBytes = size;
 
         recResult.add(v);
+        EventBus.fireOnProcessingFile(new ProcessingFilePayload(file.getAbsolutePath(), fileCount.incrementAndGet()));
 
         return size;
     }

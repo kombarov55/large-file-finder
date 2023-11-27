@@ -9,4 +9,5 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class ProcessingFilePayload {
     private String filename;
+    private int fileCount;
 }

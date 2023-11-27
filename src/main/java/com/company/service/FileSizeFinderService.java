@@ -1,6 +1,8 @@
 package com.company.service;
 
 import com.company.data.FileSizeInfo;
+import com.company.swing.event_system.EventBus;
+import com.company.swing.event_system.payload.ProcessingFilePayload;
 import com.company.util.Logger;
 
 import java.io.File;
@@ -14,16 +16,20 @@ import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class FileSizeFinderService {
 
 
     public static ExecutorService executor = Executors.newFixedThreadPool(10);
 
+    private static AtomicInteger fileCount = new AtomicInteger(0);
+
     public static List<FileSizeInfo> run(String baseDir) {
         Path baseDirPath = Paths.get(baseDir);
         List<FileSizeInfo> result = run(baseDir, baseDirPath);
         result.sort(Comparator.comparing(FileSizeInfo::getSizeInBytes).reversed());
+        fileCount.set(0);
         return result;
     }
 
@@ -49,6 +55,7 @@ public class FileSizeFinderService {
             try {
                 FileSizeInfo v = extract(baseDirPath, file);
                 result.add(v);
+                EventBus.fireOnProcessingFile(new ProcessingFilePayload(file.getAbsolutePath(), fileCount.incrementAndGet()));
             } catch (Exception e) {
                 Logger.log("ERROR AT file=" + file.getAbsolutePath());
                 e.printStackTrace();

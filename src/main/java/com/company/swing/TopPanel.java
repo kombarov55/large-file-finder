@@ -93,7 +93,7 @@ public class TopPanel {
         JComboBox<String> sortCombobox = new JComboBox<>(new String[]{"Сортировка по размеру", "Сортировка по имени"});
         sortCombobox.addActionListener(e -> {
             if (sortCombobox.getSelectedItem().equals("Сортировка по имени")) {
-                copy.sort(Comparator.comparing(FileSizeInfo::getPath));
+                copy.sort(Comparator.comparing(FileSizeInfo::getPath).thenComparing(FileSizeInfo::getSizeInBytes).reversed());
             } else {
                 copy.sort(Comparator.comparing(FileSizeInfo::getSizeInBytes).reversed());
             }
@@ -107,7 +107,9 @@ public class TopPanel {
     private static JLabel lastFileLabel() {
         JLabel jlabel = new JLabel("");
 
-        EventBus.subscribersOfProcessingFile.add(v -> jlabel.setText(v.getFilename()));
+        EventBus.subscribersOfProcessingFile.add(v -> jlabel.setText(
+                "Обработано " + v.getFileCount() + " " + v.getFilename()
+        ));
         EventBus.subscribersOfSearchEnded.add(v -> jlabel.setText(""));
 
         return jlabel;
