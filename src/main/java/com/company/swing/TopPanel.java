@@ -7,16 +7,14 @@ import com.company.swing.event_system.EventBus;
 import com.company.swing.event_system.payload.DirectorySelectedPayload;
 import com.company.swing.event_system.payload.SearchEndedPayload;
 import com.company.swing.event_system.payload.StartSearchPayload;
-import com.company.util.Logger;
 
 import javax.swing.*;
 import java.awt.*;
-import java.io.File;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 
-public class SearchPanel {
+public class TopPanel {
 
     private static boolean selectedByDirectory = false;
 
@@ -25,9 +23,27 @@ public class SearchPanel {
     private static String lastPath = ".";
 
     public static JPanel build() {
-        JPanel jpanel = new JPanel();
-        jpanel.setLayout(new FlowLayout(FlowLayout.LEADING));
+        JPanel verticalPanel = new JPanel();
+        verticalPanel.setLayout(new GridLayout(2, 1));
 
+        JPanel searchPanel = new JPanel();
+        searchPanel.setLayout(new FlowLayout(FlowLayout.LEADING));
+        searchPanel.add(fileChooseButton(searchPanel));
+        searchPanel.add(dirLabel());
+        searchPanel.add(searchTypeCombobox());
+        searchPanel.add(sortCombobox());
+        searchPanel.setMinimumSize(new Dimension(800, 100));
+
+        JPanel logPanel = new JPanel(new FlowLayout(FlowLayout.LEADING));
+        logPanel.add(lastFileLabel());
+
+        verticalPanel.add(searchPanel);
+        verticalPanel.add(logPanel);
+
+        return verticalPanel;
+    }
+
+    private static JButton fileChooseButton(JPanel jpanel) {
         JButton chooseButton = new JButton("Выбор папки");
 
         chooseButton.addActionListener(e -> {
@@ -37,9 +53,9 @@ public class SearchPanel {
             if (returnVal == JFileChooser.APPROVE_OPTION) {
                 String filePath = jFileChooser.getSelectedFile().getAbsolutePath();
                 lastPath = filePath;
-                EventBus.onDirectorySelected(new DirectorySelectedPayload(filePath));
+                EventBus.fireOnDirectorySelected(new DirectorySelectedPayload(filePath));
 
-                EventBus.onSearchStarted(new StartSearchPayload(filePath));
+                EventBus.fireOnSearchStarted(new StartSearchPayload(filePath));
                 copy = new ArrayList<>();
 
                 new Thread(() -> {
@@ -50,26 +66,30 @@ public class SearchPanel {
 
                         copy = result;
 
-                        EventBus.onSearchEnded(new SearchEndedPayload(result));
+                        EventBus.fireOnSearchEnded(new SearchEndedPayload(result));
                     } catch (Exception ex) {
                         throw new RuntimeException(ex);
                     }
                 }).start();
             }
         });
-        jpanel.add(chooseButton);
 
+        return chooseButton;
+    }
+
+    private static JLabel dirLabel() {
         JLabel dirLabel = new JLabel();
         EventBus.subscribersOfDirectorySelected.add(v -> dirLabel.setText(v.getPath()));
-        jpanel.add(dirLabel);
+        return dirLabel;
+    }
 
+    private static JComboBox<String> searchTypeCombobox() {
         JComboBox<String> combobox = new JComboBox<>(new String[]{"Считать размеры файлов", "Считать размеры папок"});
-        combobox.addActionListener(e -> {
-            selectedByDirectory = combobox.getSelectedItem().equals("Считать размеры папок");
-            Logger.log("selected " + combobox.getSelectedItem());
-        });
-        jpanel.add(combobox);
+        combobox.addActionListener(e -> selectedByDirectory = combobox.getSelectedItem().equals("Считать размеры папок"));
+        return combobox;
+    }
 
+    private static JComboBox<String> sortCombobox() {
         JComboBox<String> sortCombobox = new JComboBox<>(new String[]{"Сортировка по размеру", "Сортировка по имени"});
         sortCombobox.addActionListener(e -> {
             if (sortCombobox.getSelectedItem().equals("Сортировка по имени")) {
@@ -78,13 +98,19 @@ public class SearchPanel {
                 copy.sort(Comparator.comparing(FileSizeInfo::getSizeInBytes).reversed());
             }
 
-            EventBus.onSearchEnded(new SearchEndedPayload(copy));
+            EventBus.fireOnSearchEnded(new SearchEndedPayload(copy));
         });
-        jpanel.add(sortCombobox);
 
-        jpanel.setMinimumSize(new Dimension(800, 100));
+        return sortCombobox;
+    }
 
-        return jpanel;
+    private static JLabel lastFileLabel() {
+        JLabel jlabel = new JLabel("");
+
+        EventBus.subscribersOfProcessingFile.add(v -> jlabel.setText(v.getFilename()));
+        EventBus.subscribersOfSearchEnded.add(v -> jlabel.setText(""));
+
+        return jlabel;
     }
 }
 
