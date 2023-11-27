@@ -1,24 +1,15 @@
 package com.company.data;
 
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.nio.file.Path;
 
 @Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class FileSizeInfo {
     public Path path;
     public long sizeInBytes;
-
-    public FileSizeInfo(Path path, long sizeInBytes) {
-        this.path = path;
-        this.sizeInBytes = sizeInBytes;
-    }
-
-    public Path getPath() {
-        return path;
-    }
-
-    public long getSizeInBytes() {
-        return sizeInBytes;
-    }
 }
