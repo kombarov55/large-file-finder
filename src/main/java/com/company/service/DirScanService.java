@@ -38,7 +38,7 @@ public class DirScanService implements IScanService {
         File file = new File(currentDirPath);
         
         FileNode currentDir = FileNode.builder()
-        		.path(file.toPath().toString())
+        		.path(pathToString(file, baseDirPath))
         		.children(new ArrayList<>())
         		.build();
 
@@ -60,7 +60,7 @@ public class DirScanService implements IScanService {
                     	
                     	long fileSize = Files.size(ithFile.toPath());
                     	FileNode regularFileNode = FileNode.builder()
-                    			.path(ithFile.getPath())
+                    			.path(pathToString(ithFile, baseDirPath))
                     			.sizeInBytes(fileSize)
                     			.children(new ArrayList<>())
                     			.build();
@@ -95,6 +95,14 @@ public class DirScanService implements IScanService {
 		}
 		
 		return result;
+	}
+	
+	private String pathToString(File file, Path basePath) {
+		if (file.toPath().equals(basePath)) {
+			return basePath.getFileName().toString();
+		}
+		
+		return basePath.relativize(file.toPath()).toString();
 	}
 	
 	public static void main(String[] args) {
