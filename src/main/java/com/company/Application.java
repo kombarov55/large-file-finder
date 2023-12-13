@@ -16,7 +16,6 @@ public class Application {
         jframe.getContentPane().add(BorderLayout.NORTH, TopPanel.build());
         jframe.getContentPane().add(BorderLayout.CENTER, DataTable.build());
 
-
         jframe.setVisible(true);
     }
 }

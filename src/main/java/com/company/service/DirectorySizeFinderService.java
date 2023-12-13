@@ -34,13 +34,18 @@ public class DirectorySizeFinderService {
         File[] files = file.listFiles();
 
         for (int i = 0; i < files.length; i++) {
+        	
             File currentFile = files[i];
             if (Files.isDirectory(file.toPath()) && currentFile.listFiles() != null) {
                 size += run(currentFile.getAbsolutePath(), baseDirPath, recResult);
             } else {
                 try {
-                    Logger.log(currentFile.getAbsolutePath());
-                    size += Files.size(currentFile.toPath());
+                    if (Files.isSymbolicLink(currentFile.toPath())) {
+                    	Logger.log(currentFile.getAbsolutePath() + " is symlink.");
+                    } else {
+                    	Logger.log(currentFile.getAbsolutePath());
+                    	size += Files.size(currentFile.toPath());
+                    }
                 } catch (Exception e) {
                     Logger.log("ERROR cannot determine size of name=" + file.getAbsolutePath());
                     e.printStackTrace();
