@@ -1,10 +1,5 @@
 package com.company.service;
 
-import com.company.data.FileSizeInfo;
-import com.company.swing.event_system.EventBus;
-import com.company.swing.event_system.payload.ProcessingFilePayload;
-import com.company.util.Logger;
-
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -13,28 +8,28 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
 
-public class FileSizeFinderService {
+import com.company.data.FileInfoDto;
+import com.company.data.FileSizeInfo;
+import com.company.swing.event_system.EventBus;
+import com.company.swing.event_system.payload.ProcessingFilePayload;
+import com.company.util.Logger;
 
+public class FileSizeFinderService implements IScanService {
 
-    public static ExecutorService executor = Executors.newFixedThreadPool(10);
-
-    private static AtomicInteger fileCount = new AtomicInteger(0);
-
-    public static List<FileSizeInfo> run(String baseDir) {
-        Path baseDirPath = Paths.get(baseDir);
-        List<FileSizeInfo> result = run(baseDir, baseDirPath);
-        result.sort(Comparator.comparing(FileSizeInfo::getSizeInBytes).reversed());
-        fileCount.set(0);
+    private AtomicInteger fileCount = new AtomicInteger(0);
+    
+    @Override
+	public List<FileInfoDto> scan(String baseDir) {
+    	Path baseDirPath = Paths.get(baseDir);
+        List<FileInfoDto> result = run(baseDir, baseDirPath);
+        result.sort(Comparator.comparing(FileInfoDto::getSizeInBytes).reversed());
         return result;
     }
 
-    public static List<FileSizeInfo> run(String currentDir, Path baseDirPath) {
-        List<FileSizeInfo> result = new ArrayList<>();
+    public List<FileInfoDto> run(String currentDir, Path baseDirPath) {
+        List<FileInfoDto> result = new ArrayList<>();
 
         File dir = new File(currentDir);
 
@@ -44,8 +39,6 @@ public class FileSizeFinderService {
         } catch (Exception e) {
             Logger.log("ERROR at dir=" + dir.getAbsolutePath());
         }
-
-        List<CompletableFuture<List<FileSizeInfo>>> parts = new ArrayList<>();
 
         for (File file : files) {
             if (file.isDirectory() && file.listFiles() != null) {
@@ -65,12 +58,11 @@ public class FileSizeFinderService {
         return result;
     }
 
-    private static FileSizeInfo extract(Path baseDirPath, File file) throws IOException {
-        Path path = baseDirPath.relativize(file.toPath());
+    private FileSizeInfo extract(Path baseDirPath, File file) throws IOException {
+        String path = baseDirPath.relativize(file.toPath()).toString();
         long size = Files.size(file.toPath());
 
         Logger.log("name=" + path + " size=" + size);
         return new FileSizeInfo(path, size);
     }
-
 }

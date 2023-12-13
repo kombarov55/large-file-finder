@@ -1,6 +1,5 @@
 package com.company.data;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import lombok.AllArgsConstructor;
@@ -12,7 +11,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class FileNode {
+public class FileNode extends FileInfoDto {
 	private String path;
 	private long sizeInBytes;
 	private List<FileNode> children;

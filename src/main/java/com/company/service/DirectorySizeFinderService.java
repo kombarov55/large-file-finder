@@ -18,7 +18,7 @@ public class DirectorySizeFinderService {
 
     private static AtomicInteger fileCount = new AtomicInteger(0);
 
-    public static List<FileSizeInfo> run(String baseDir) {
+    public static List<FileSizeInfo> scan(String baseDir) {
         Path baseDirPath = Paths.get(baseDir);
         List<FileSizeInfo> result = new ArrayList<>();
         run(baseDir, baseDirPath, result);
@@ -55,8 +55,8 @@ public class DirectorySizeFinderService {
 
         FileSizeInfo v = new FileSizeInfo();
         v.path = file.toPath().equals(baseDirPath)
-                ? baseDirPath
-                : baseDirPath.relativize(file.toPath());
+                ? baseDirPath.toString()
+                : baseDirPath.relativize(file.toPath()).toString();
         v.sizeInBytes = size;
 
         recResult.add(v);

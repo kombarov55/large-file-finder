@@ -4,12 +4,10 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.nio.file.Path;
-
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class FileSizeInfo {
-    public Path path;
+public class FileSizeInfo extends FileInfoDto {
+    public String path;
     public long sizeInBytes;
 }

@@ -1,20 +1,21 @@
 package com.company.swing;
 
-import com.company.data.FileSizeInfo;
-import com.company.swing.event_system.EventBus;
-
-import javax.swing.*;
-import javax.swing.table.DefaultTableModel;
-import java.awt.*;
-import java.math.BigDecimal;
-import java.math.RoundingMode;
+import java.awt.Dimension;
 import java.util.List;
 import java.util.stream.Collectors;
+
+import javax.swing.JComponent;
+import javax.swing.JScrollPane;
+import javax.swing.JTable;
+import javax.swing.table.DefaultTableModel;
+
+import com.company.data.FileInfoDto;
+import com.company.swing.event_system.EventBus;
 
 public class DataTable {
 
     public static JComponent build() {
-        DefaultTableModel tableModel = new DefaultTableModel(new String[] {"Путь к файлу", "Размер в ГБ", "Размер в МБ", "Размер в байтах"}, 0);
+        DefaultTableModel tableModel = new DefaultTableModel(new String[] {"Путь к файлу", "Размер"}, 0);
         JTable jtable = new JTable(tableModel);
         jtable.setPreferredScrollableViewportSize(new Dimension(500, 70));
         jtable.setFillsViewportHeight(true);
@@ -27,20 +28,13 @@ public class DataTable {
 
         return new JScrollPane(jtable);
     }
-    private static Object[][] toRowData(List<FileSizeInfo> result) {
+    private static Object[][] toRowData(List<FileInfoDto> result) {
         return result.stream()
                 .map(v -> {
-                    String sizeInMb = BigDecimal.valueOf(v.getSizeInBytes() / 1024.0 / 1024.0)
-                            .setScale(3, RoundingMode.HALF_UP).toString();
-                    String sizeInGb = BigDecimal.valueOf(v.getSizeInBytes() / 1024.0 / 1024.0 / 1024.0)
-                            .setScale(3, RoundingMode.HALF_UP).toString();;
-
-                    return new Object[] {v.path,
-                            sizeInGb,
-                            sizeInMb,
-                            v.sizeInBytes
+                    return new Object[] {v.getPath(),
+                            v.sizeInHumanText()
                     };
-                }).collect(Collectors.toList()).toArray(new Object[result.size()][4]);
+                }).collect(Collectors.toList()).toArray(new Object[result.size()][2]);
     }
 
     private static void updateData(DefaultTableModel model, Object[][] data) {

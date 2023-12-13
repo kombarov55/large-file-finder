@@ -1,25 +1,29 @@
 package com.company.swing;
 
-import com.company.data.FileSizeInfo;
-import com.company.service.DirectorySizeFinderService;
+import java.awt.Dimension;
+import java.awt.FlowLayout;
+import java.awt.GridLayout;
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.swing.JButton;
+import javax.swing.JComboBox;
+import javax.swing.JFileChooser;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+
+import com.company.data.FileInfoDto;
+import com.company.service.DirScanService;
 import com.company.service.FileSizeFinderService;
 import com.company.swing.event_system.EventBus;
 import com.company.swing.event_system.payload.DirectorySelectedPayload;
 import com.company.swing.event_system.payload.SearchEndedPayload;
 import com.company.swing.event_system.payload.StartSearchPayload;
 
-import javax.swing.*;
-import java.awt.*;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
-
 public class TopPanel {
 
-    private static boolean selectedByDirectory = false;
-
-    private static List<FileSizeInfo> copy = new ArrayList<>();
-
+    private static ScanStrategy scanStrategy = ScanStrategy.DIRECTORIES;
+    
     private static String lastPath = ".";
 
     public static JPanel build() {
@@ -31,7 +35,6 @@ public class TopPanel {
         searchPanel.add(fileChooseButton(searchPanel));
         searchPanel.add(dirLabel());
         searchPanel.add(searchTypeCombobox());
-        searchPanel.add(sortCombobox());
         searchPanel.setMinimumSize(new Dimension(800, 100));
 
         JPanel logPanel = new JPanel(new FlowLayout(FlowLayout.LEADING));
@@ -56,15 +59,10 @@ public class TopPanel {
                 EventBus.fireOnDirectorySelected(new DirectorySelectedPayload(filePath));
 
                 EventBus.fireOnSearchStarted(new StartSearchPayload(filePath));
-                copy = new ArrayList<>();
 
                 new Thread(() -> {
                     try {
-                        List<FileSizeInfo> result = selectedByDirectory
-                                ? DirectorySizeFinderService.run(filePath)
-                                : FileSizeFinderService.run(filePath);
-
-                        copy = result;
+                        List<FileInfoDto> result = runRequest(filePath);
 
                         EventBus.fireOnSearchEnded(new SearchEndedPayload(result));
                     } catch (Exception ex) {
@@ -84,24 +82,9 @@ public class TopPanel {
     }
 
     private static JComboBox<String> searchTypeCombobox() {
-        JComboBox<String> combobox = new JComboBox<>(new String[]{"Считать размеры файлов", "Считать размеры папок"});
-        combobox.addActionListener(e -> selectedByDirectory = combobox.getSelectedItem().equals("Считать размеры папок"));
+        JComboBox<String> combobox = new JComboBox<>(ScanStrategy.descriptions());
+        combobox.addActionListener(e -> scanStrategy = ScanStrategy.findByDescription(combobox.getSelectedItem()));
         return combobox;
-    }
-
-    private static JComboBox<String> sortCombobox() {
-        JComboBox<String> sortCombobox = new JComboBox<>(new String[]{"Сортировка по размеру", "Сортировка по имени"});
-        sortCombobox.addActionListener(e -> {
-            if (sortCombobox.getSelectedItem().equals("Сортировка по имени")) {
-                copy.sort(Comparator.comparing(FileSizeInfo::getPath).thenComparing(FileSizeInfo::getSizeInBytes).reversed());
-            } else {
-                copy.sort(Comparator.comparing(FileSizeInfo::getSizeInBytes).reversed());
-            }
-
-            EventBus.fireOnSearchEnded(new SearchEndedPayload(copy));
-        });
-
-        return sortCombobox;
     }
 
     private static JLabel lastFileLabel() {
@@ -114,5 +97,15 @@ public class TopPanel {
 
         return jlabel;
     }
+    
+    private static List<FileInfoDto> runRequest(String dirPath) {
+    	switch (scanStrategy) {
+    		case DIRECTORIES:
+    			return new DirScanService().scan(dirPath);
+    		case FILES:
+    			return new FileSizeFinderService().scan(dirPath);
+    		default: 
+    			return new ArrayList<>();
+    	} 
+    }
 }
-

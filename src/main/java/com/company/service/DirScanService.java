@@ -6,30 +6,39 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import com.company.data.FileInfoDto;
 import com.company.data.FileNode;
 import com.company.swing.event_system.EventBus;
 import com.company.swing.event_system.payload.ProcessingFilePayload;
 import com.company.util.Logger;
 
-public class DirScannerService {
+public class DirScanService implements IScanService {
 
 	private static AtomicInteger fileCount = new AtomicInteger(0);
 	
-	public static FileNode run(String baseDir) {
+	public FileNode run(String baseDir) {
 		FileNode root = scanDir(baseDir, Paths.get(baseDir));
 		sortBySize(root);
 		return root;
 	}
 	
-	public static FileNode scanDir(String currentDirPath, Path baseDirPath) {
+	@Override
+	public List<FileInfoDto> scan(String baseDirPath) {
+		FileNode root = scanDir(baseDirPath, Paths.get(baseDirPath));
+		sortBySize(root);
+		return toList(root);
+	}
+
+
+
+	public FileNode scanDir(String currentDirPath, Path baseDirPath) {
         File file = new File(currentDirPath);
         
         FileNode currentDir = FileNode.builder()
-        		.path(file.toPath().equals(baseDirPath)
-                        ? baseDirPath.toString()
-                        : baseDirPath.relativize(file.toPath()).toString())
+        		.path(file.toPath().toString())
         		.children(new ArrayList<>())
         		.build();
 
@@ -38,7 +47,7 @@ public class DirScannerService {
         for (int i = 0; i < files.length; i++) {
         	
             File ithFile = files[i];
-            if (Files.isDirectory(file.toPath()) && ithFile.listFiles() != null) {
+            if (Files.isDirectory(file.toPath()) && ithFile.listFiles() != null && !Files.isSymbolicLink(file.toPath())) {
                 FileNode childDir = scanDir(ithFile.getAbsolutePath(), baseDirPath);
                 currentDir.addSize(childDir.getSizeInBytes());
                 currentDir.getChildren().add(childDir);
@@ -69,17 +78,30 @@ public class DirScannerService {
         return currentDir;
     }
 	
-	private static void sortBySize(FileNode fileNode) {
+	private void sortBySize(FileNode fileNode) {
 		if (!fileNode.getChildren().isEmpty()) {
 			fileNode.getChildren().sort(Comparator.comparing(FileNode::getSizeInBytes).reversed());
 			
-			fileNode.getChildren().forEach(DirScannerService::sortBySize);
+			fileNode.getChildren().forEach(this::sortBySize);
 		}
 	}
 	
+	private List<FileInfoDto> toList(FileNode root) {
+		List<FileInfoDto> result = new ArrayList<>();
+		result.add(root);
+		
+		for (FileNode child : root.getChildren()) {
+			result.addAll(toList(child));
+		}
+		
+		return result;
+	}
+	
 	public static void main(String[] args) {
-		FileNode root = DirScannerService.run("/Users/nikolay/git/large-file-finder");
-		sortBySize(root);
+		DirScanService dirScanService = new DirScanService();
+		
+		FileNode root = dirScanService.run("/Users/nikolay/git/large-file-finder");
+		dirScanService.sortBySize(root);
 		System.out.println("DEBUG");
 	}
 	
