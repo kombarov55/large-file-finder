@@ -15,7 +15,7 @@ import lombok.NoArgsConstructor;
 public class FileNode {
 	private String path;
 	private long sizeInBytes;
-	private List<FileNode> children = new ArrayList<>();
+	private List<FileNode> children;
 	
 	public void addSize(float x) {
 		sizeInBytes += x;

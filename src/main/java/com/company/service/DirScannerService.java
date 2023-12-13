@@ -4,6 +4,8 @@ import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import com.company.data.FileNode;
@@ -17,19 +19,19 @@ public class DirScannerService {
 	
 	public static FileNode run(String baseDir) {
 		FileNode root = scanDir(baseDir, Paths.get(baseDir));
-		
-		
-		
+		sortBySize(root);
 		return root;
 	}
 	
 	public static FileNode scanDir(String currentDirPath, Path baseDirPath) {
         File file = new File(currentDirPath);
         
-        FileNode currentDir = new FileNode();
-        currentDir.setPath(file.toPath().equals(baseDirPath)
-                ? baseDirPath.toString()
-                : baseDirPath.relativize(file.toPath()).toString());
+        FileNode currentDir = FileNode.builder()
+        		.path(file.toPath().equals(baseDirPath)
+                        ? baseDirPath.toString()
+                        : baseDirPath.relativize(file.toPath()).toString())
+        		.children(new ArrayList<>())
+        		.build();
 
         File[] files = file.listFiles();
 
@@ -51,6 +53,7 @@ public class DirScannerService {
                     	FileNode regularFileNode = FileNode.builder()
                     			.path(ithFile.getPath())
                     			.sizeInBytes(fileSize)
+                    			.children(new ArrayList<>())
                     			.build();
                     	currentDir.addSize(fileSize);
                     	currentDir.getChildren().add(regularFileNode);
@@ -66,8 +69,17 @@ public class DirScannerService {
         return currentDir;
     }
 	
+	private static void sortBySize(FileNode fileNode) {
+		if (!fileNode.getChildren().isEmpty()) {
+			fileNode.getChildren().sort(Comparator.comparing(FileNode::getSizeInBytes).reversed());
+			
+			fileNode.getChildren().forEach(DirScannerService::sortBySize);
+		}
+	}
+	
 	public static void main(String[] args) {
 		FileNode root = DirScannerService.run("/Users/nikolay/git/large-file-finder");
+		sortBySize(root);
 		System.out.println("DEBUG");
 	}
 	
